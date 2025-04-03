@@ -1,64 +1,179 @@
-import uuid
-from django.db import models
-from django.contrib.auth.models import User
-from rest_framework import serializers, viewsets, routers
-from django.urls import path, include
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.decorators import action
-from rest_framework.response import Response
+package com.LMS;
 
-# Models
-class Course(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    title = models.CharField(max_length=255)
-    description = models.TextField()
-    instructor = models.ForeignKey(User, on_delete=models.CASCADE)
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-    def __str__(self):
-        return self.title
+@SpringBootApplication
+public class LmsApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(LmsApplication.class, args);
+    }
+} 
 
-class Enrollment(models.Model):
-    student = models.ForeignKey(User, on_delete=models.CASCADE)
-    course = models.ForeignKey(Course, on_delete=models.CASCADE)
-    enrolled_on = models.DateTimeField(auto_now_add=True)
+// User Entity
+package com.lms.model;
 
-    class Meta:
-        unique_together = ('student', 'course')
+import jakarta.persistence.*;
 
-# Serializers
-class CourseSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Course
-        fields = '__all__'
+@Entity
+@Table(name = "users")
+public class User {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    private String name;
+    private String email;
+    private String role; // ADMIN, INSTRUCTOR, STUDENT
+    
+    // Getters and Setters
+}
 
-class EnrollmentSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Enrollment
-        fields = '__all__'
+// Course Entity
+package com.lms.model;
 
-# ViewSets
-class CourseViewSet(viewsets.ModelViewSet):
-    queryset = Course.objects.all()
-    serializer_class = CourseSerializer
-    permission_classes = [IsAuthenticated]
+import jakarta.persistence.*;
 
-class EnrollmentViewSet(viewsets.ModelViewSet):
-    queryset = Enrollment.objects.all()
-    serializer_class = EnrollmentSerializer
-    permission_classes = [IsAuthenticated]
+@Entity
+@Table(name = "courses")
+public class Course {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    private String title;
+    private String description;
+    private Long instructor;
+    
+    // Getters and Setters
+}
 
-    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
-    def my_courses(self, request):
-        enrollments = Enrollment.objects.filter(student=request.user)
-        courses = [enrollment.course for enrollment in enrollments]
-        return Response(CourseSerializer(courses, many=True).data)
+// Enrollment Entity
+package com.lms.model;
 
-# Router
-router = routers.DefaultRouter()
-router.register(r'courses', CourseViewSet)
-router.register(r'enrollments', EnrollmentViewSet)
+import Jakarta.persistence.*;
 
-# URL Patterns
-urlpatterns = [
-    path('api/', include(router.urls)),
-]
+@Entity
+@Table(name = "enrollments")
+public class Enrollment {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    private Long student;
+    private Long course;
+    
+    // Getters and Setters
+}
+
+// User Repository
+package com.lms.repository;
+
+import com.lms.model.User;
+import org. spring. framework.data.jpa.repository.JpaRepository;
+
+public interface UserRepository extends JpaRepository<User, Long> {
+}
+
+// Course Repository
+package com.lms.repository;
+
+import com.lms.model.Course;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface CourseRepository extends JpaRepository<Course, Long> {
+}
+
+// Enrollment Repository
+package com.lms.repository;
+
+import com.lms.model.Enrollment;
+import org. spring framework.data.jpa.repository.JpaRepository;
+
+public interface EnrollmentRepository extends JpaRepository<Enrollment, Long> {
+}
+
+// User Controller
+package com.lms.controller;
+
+import com.lms.model.User;
+import com.lms.repository.UserRepository;
+import org. spring. framework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/users")
+public class UserController {
+    private final UserRepository userRepository;
+    
+    public UserController(UserRepository user repository) {
+        this.userRepository = userRepository;
+    }
+    
+    @GetMapping
+    public List<User> getAllUsers() {
+        return userRepository.findAll();
+    }
+    
+    @PostMapping
+    public User createUser(@RequestBody User user) {
+        return userRepository.save(user);
+    }
+}
+
+// Course Controller
+package com.lms.controller;
+
+import com.lms.model.Course;
+import com.lms.repository.CourseRepository;
+import org. spring. framework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/courses")
+public class CourseController {
+    private final CourseRepository course repository;
+    
+    public CourseController(CourseRepository course repository) {
+        this.courseR rpository = courseRepository;
+    }
+    
+    @GetMapping
+    public List<Course> getAllCourses() {
+        return courseRepository.findAll();
+    }
+    
+    @PostMapping
+    public Course createCourse(@RequestBody Course course) {
+        return courseRepository.save(course);
+    }
+}
+
+// Enrollment Controller
+package com.lms.controller;
+
+import com.lms.model.Enrollment;
+import com.lms.repository.EnrollmentRepository;
+import org. spring framework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/enrollments")
+public class EnrollmentController {
+    private final EnrollmentRepository enrollmentRepository;
+    
+    public EnrollmentController(EnrollmentRepository enrollmentRepository) {
+        this.enrollmentRepository = enrollmentRepository;
+    }
+    
+    @GetMapping
+    public List<Enrollment> getAllEnrollments() {
+        return enrollmentRepository.findAll();
+    }
+    
+    @PostMapping
+    public Enrollment enrollStudent(@RequestBody Enrollment enrollment) {
+        return enrollmentRepository.save(enrollment);
+    }
+}
+                                
