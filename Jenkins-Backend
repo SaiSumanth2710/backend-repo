@@ -1,0 +1,23 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'dev', url: '<backend-repo-url>'
+            }
+        }
+
+        stage('Build') {
+            steps {
+                sh 'docker build -t backend-dev .'
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                sh 'docker run -d -p 3000:3000 --name backend-container backend-dev'
+            }
+        }
+    }
+}
